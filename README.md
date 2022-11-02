@@ -12,6 +12,8 @@ Chegou o bootcamp que vai te dar a oportunidade de impulsionar os seus conhecime
 
 ## Conteúdo
 
+- [Conhecendo o Sistema Operacional Linux](conhecendo-linux/README.md) 
+
 ## Mais informações
 
 Para mais informações, acesse diretamente o [Bootcamp](https://web.dio.me/track/jornada-devops-com-aws-impulso) na [DIO](https://www.dio.me/)
