@@ -12,7 +12,7 @@ Chegou o bootcamp que vai te dar a oportunidade de impulsionar os seus conhecime
 
 ## Conteúdo
 
-- [Conhecendo o Sistema Operacional Linux](conhecendo-linux/README.md) 
+- [Conhecendo o Sistema Operacional Linux](conhecendo-linux/) 
 
 ## Mais informações
 
