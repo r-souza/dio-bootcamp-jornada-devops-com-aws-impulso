@@ -9,4 +9,4 @@ Treinamento de introdução ao sistema operacional Linux, com foco em distribui�
 ## Lab Projects
   - [x] [
 Infraestrutura como Código: Script de Criação de Estrutura de Usuários, Diretórios e Permissões](scripts/lab-iac-01.sh)
-  - [x] Infraestrutura como Código - Script de Provisionamento de um Servidor Web (Apache)
+  - [x] [Infraestrutura como Código - Script de Provisionamento de um Servidor Web (Apache)](scripts/lab-iac-02.sh)
