@@ -67,7 +67,7 @@ CMD [ "python", "./app.py" ]
 
 É possível definir arquivos Dockerfiles utilizando a técnica de multistage build, que permite que uma imagem seja gerada copiando arquivos de uma estágio de build anterior. Uma das vantagens dessa técnica é que a imagem final não precisa conter todas as dependências necessárias para o build, apenas as necessárias para a execução do software, fazendo com que a imagem final seja menor.
 
-Veja abaixo um exemplo de Dockerfile que utiliza a técnica de multistage build para gerar uma imagem final com apenas *11MB*, enquanto a imagem utilizada na fase de build possui *992MB*.
+Veja abaixo um exemplo de Dockerfile que utiliza a técnica de multistage build para gerar uma imagem final com apenas **11MB**, enquanto a imagem utilizada na fase de build possui **992MB**.
 
 ```dockerfile
 FROM golang as golang-builder
@@ -133,3 +133,53 @@ Se necessário verificar as imagens disponíveis no registry privado, basta aces
 ````
 curl http://registryserver:5000/v2/_catalog
 ````
+
+### Docker Compose
+
+Docker compose é uma ferramenta desenvolvida para facilitar a criação e execução de containers Docker. Com o docker compose, é possível definir um arquivo de configuração YAML com todas as definições necessárias para a criação de containers, como por exemplo, nome do container, imagem, portas, volumes, etc.
+
+#### Instalação do Docker Compose no Ubuntu
+
+Para instalar o docker compose no Ubuntu, basta executar o comando abaixo.
+
+```
+sudo apt install docker-compose
+```
+
+Com o docker compose instalado, basta criar um arquivo `docker-compose.yml` com as definições necessárias para a criação dos containers.
+
+Abaixo um exemplo de arquivo docker-compose.yml para criação de um container com o MySQL e outro com o Adminer, ambos conectados em uma mesma rede.
+
+```yaml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: database_name
+      MYSQL_USER: database_user
+      MYSQL_PASSWORD: database_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    restart: always
+    networks:
+      - app-network 
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+Vários exemplos interessantes de arquivos docker-compose.yml podem ser encontrados no repositório [awesome-compose](https://github.com/docker/awesome-compose/) do Docker.
