@@ -183,3 +183,21 @@ networks:
 ```
 
 Vários exemplos interessantes de arquivos docker-compose.yml podem ser encontrados no repositório [awesome-compose](https://github.com/docker/awesome-compose/) do Docker.
+
+### Lab - Criando um container de uma aplicação web com Docker Compose
+
+Abaixo o conteúdo do arquivo docker-compose.yml utilizado para criação de um container com uma aplicação web estática utilizando o template [Venus](https://cruip.com/demos/venus/).
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    image: nginx:alpine
+    volumes:
+      - ./app:/usr/share/nginx/html # Template from https://cruip.com/demos/venus/
+    ports:
+      - 8000:80
+```
+
+Demais arquivos desse laboratório estão disponíveis em [lab](lab/) 

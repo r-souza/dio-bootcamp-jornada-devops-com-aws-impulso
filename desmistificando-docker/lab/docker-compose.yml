@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  app:
+    image: nginx:alpine
+    volumes:
+      - ./app:/usr/share/nginx/html # Template from https://cruip.com/demos/venus/
+    ports:
+      - 8000:80
+
