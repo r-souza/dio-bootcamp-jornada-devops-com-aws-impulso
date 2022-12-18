@@ -8,7 +8,226 @@ Treinamento de introdução ao Docker
 
 ## Armazenamento de Dados
 
-## Processamento, logs e Rede
+É importante ter em mente que os containers são efemeros, ou seja, toda vez que um container é parado, todos os dados armazenados no container são perdidos. Para evitar que isso ocorra, é possível persistir os dados para que sejam armazenados em um local externo ao container.
+
+Existem 2 formas de persistir dados de containers:
+
+<div align="center">
+  <img src="images/types-of-mounts-volumes.png" alt="Bootcamp Logo" /> 
+</div>
+
+- **Volumes**: São diretórios que podem ser compartilhados entre containers, sendo completamente gerenciados pelo Docker. Para criar um volume, basta executar o comando `docker volume create` e em seguida utilizar o volume criado no container utilizando a flag `--volume`. Mais detalhes podem ser encontrados na [documentação oficial](https://docs.docker.com/storage/volumes/).
+  
+```
+docker volume create myvolume
+docker run -d --name mycontainer --volume myvolume:/opt/myvolume ubuntu
+```
+
+- **Bind Mounts**: São diretórios que podem ser compartilhados entre containers e o host, sendo possível acessar os dados diretamente por qualquer processo do host. Para utilizar um bind mount, basta utilizar a flag `--mount` e definir o tipo como `bind` e o diretório que será compartilhado, ou também é possível utilizar a flag `-v` e definir o diretório que será compartilhado. Mais detalhes podem ser encontrados na [documentação oficial](https://docs.docker.com/storage/bind-mounts/).
+  
+```
+docker run -d --name mycontainer --mount type=bind,source=/opt/myvolume,target=/opt/myvolume ubuntu
+docker run -d --name mycontainer -v /opt/myvolume:/opt/myvolume ubuntu
+```
+
+Existe ainda uma terceira forma de montar dados dentro de um container, que é utilizando `tmpfs mounts`. Essa forma pode ser interessante em cenários onde não é necessário persistir os dados, mas sim permitir o acesso rápido a eles. Por exemplo, armazenamento de dados em cache.
+
+- **Tmpfs Mounts**: Os dados são armazenados somente na memória do host. Para utilizar um tmpfs mount, basta utilizar a flag `--mount` e definir o tipo como `tmpfs` e o diretório de destino dentro do container. Mais detalhes podem ser encontrados na [documentação oficial](https://docs.docker.com/storage/tmpfs/).
+  
+```
+docker run -d --name mycontainer --mount type=tmpfs,target=/opt/cache ubuntu
+```
+
+## Processamento, Logs e Rede
+
+### Processamento
+
+Por padrão, os container são executados com acesso à todos os recursos do host. Para limitar o acesso dos containers, é possível definir limites de uso de CPU e memória utilizando as flags `--cpu-shares` e `--memory`.
+
+```
+docker run -d --name mycontainer --cpu-shares 512 --memory 512m ubuntu
+```
+
+É possível acompanhar o consumo de CPU e memória de um container utilizando o comando `docker stats`.
+
+```
+docker stats mycontainer
+```
+
+```
+CONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+f7b0c9b0b0b1        mycontainer         0.00%               1.199MiB / 512MiB     0.23%               0B / 0B             0B / 0B             1
+```
+
+### Docker Top
+
+Através do comando `docker top` é possível obter informações sobre os processos em execução dentro de um container.
+
+```
+docker top mycontainer
+```
+
+```
+UID                 PID                 PPID                C                   STIME               TTY                 TIME                CMD
+root                1234                1234                0                   12:00               ?                   00:00:00            /bin/bash
+```
+
+
+### Informações e Logs
+
+Existem alguns comandos que podem ser utilizados para obter informações sobre os containers em execução. 
+
+#### Docker Inspect
+
+Docker Inspect é um comando que pode ser utilizado para obter informações sobre containers, imagens, volumes, redes e plugins.
+
+Por exemplo, para saber onde um container está conectado, basta executar o comando `docker inspect` e filtrar o resultado pelo campo `NetworkSettings.Networks`.
+
+```
+docker inspect mycontainer
+```
+
+```json
+[
+    {
+        "Id": "f7b0c9b0b0b1
+        "Name": "mycontainer",
+        "State": {
+            "Status": "running",
+            "Running": true,
+            ...
+            ... 
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "f7b0c9b0b0b1",
+                    "EndpointID": "f7b0c9b0b0b1",
+                    "Gateway": "
+                    ...
+```
+
+Um outro exemplo pode ser obtido utilizando o comando `docker inspect` e filtrando o resultado pelo campo `Mounts`.
+
+```
+docker inspect mycontainer
+```
+
+```json
+[
+    {
+        "Id": "f7b0c9b0b0b1
+        "Name": "mycontainer",
+        "State": {
+            "Status": "running",
+            "Running": true,
+            ...
+            ... 
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "myvolume",
+                "Source": "/var/lib/docker/volumes/myvolume/_data",
+                "Destination": "/opt/myvolume",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    }
+]
+```
+
+Também é possível inspecionar os volumes utilizando o comando `docker volume inspect`.
+
+```
+docker volume inspect myvolume
+```
+
+```json
+[
+    {
+        "CreatedAt": "2020-05-01T12:00:00Z",
+        "Driver": "local",
+        "Labels": {},
+        "Mountpoint": "/var/lib/docker/volumes/myvolume/_data",
+        "Name": "myvolume",
+        "Options": {},
+        "Scope": "local"
+    }
+]
+```
+
+#### Docker Logs
+
+Para obter os logs de um container, basta executar o comando `docker logs`.
+
+```
+docker logs mycontainer
+```
+
+```
+2020-05-01 12:00:00 INFO: Starting application
+2020-05-01 12:00:00 INFO: Application started
+```
+
+#### Docker Info
+
+Através do comando `docker info` é possível obter informações sobre o host e os containers em execução.
+
+```
+docker info
+```
+
+```
+Containers: 1
+ Running: 1
+ Paused: 0
+ Stopped: 0
+Images: 1
+...
+```
+
+### Rede
+
+Por padrão, os containers são executados em uma rede chamada **bridge**, que tem acesso ao Host. Para que os containers possam se comunicar entre si, é necessário que eles estejam em uma mesma rede. Para isso, é necessário criar uma rede e adicionar os containers nessa rede.
+
+Para listar as redes existentes, basta executar o comando `docker network ls`.
+
+```
+docker network ls
+````
+
+```
+NETWORK ID          NAME                DRIVER              SCOPE
+f7b0c9b0b0b1        bridge              bridge              local
+f7b0c9b0b0b1        host                host                local
+f7b0c9b0b0b1        none                null                local
+```
+
+Para criar uma rede, basta executar o comando `docker network create`.
+
+```
+docker network create mynetwork
+```
+
+Com a rede criada, podemos adicionar um container a essa rede utilizando a flag `--network`.
+
+```
+docker run -d --name mycontainer --network mynetwork ubuntu
+docker run -d --name mycontainer2 --network mynetwork ubuntu
+```
+
+Uma vez que os containers estão na mesma rede, é possível acessá-los utilizando o nome do container.
+
+```
+docker exec -it mycontainer ping mycontainer2
+```
 
 ## Definição e criação de um Dockerfile
 
