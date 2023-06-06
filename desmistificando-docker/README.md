@@ -420,3 +420,175 @@ services:
 ```
 
 Demais arquivos desse laboratório estão disponíveis em [lab](lab/) 
+
+## Criando um Cluster com o Docker Swarm
+
+Um Cluster considte em computadores ligados que trabalham em conjunto, de modo que, em muitos aspectos, podem ser considerados como um único sistema. Computadores em cluster executam a mesma tarefa, controlado e programado por software. Cada computador presente em um cluster é conhecido como nó.
+
+### O que é o Docker Swarm?
+
+O Swarm é um recurso do Docker que fornece funcionalidades de orquestração de container, incluindo clustering nativo de hosts do Docker e agendamento de cargas de trabalaho de containers. Um grupo de hosts do Docker formam um cluster "Swarm"
+
+### Como funciona o Docker Swarm?
+
+O Docker Swarm é composto por um ou mais nós, que podem ser gerenciados por um nó manager. O nó manager é responsável por gerenciar o cluster, enquanto o nó worker é responsável por executar as tarefas.
+
+### Como criar um Cluster com o Docker Swarm
+
+Para criar um cluster com o Docker Swarm, basta executar o comando abaixo em um dos nós que irá compor o cluster.
+
+```
+docker swarm init
+```
+
+Após a execução do comando, será exibido um token que será utilizado para adicionar novos nós ao cluster. Veja abaixo um exemplo:
+
+```
+Swarm initialized: current node (dxn1zf6l61qsb1josjja83ngz) is now a manager.
+
+To add a worker to this swarm, run the following command:
+
+    docker swarm join \
+    --token SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
+    192.168.99.100:2377
+
+To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+```
+
+Mais detalhes podem ser encontrados na [documentação oficial do Docker:](https://docs.docker.com/engine/reference/commandline/swarm_init/)
+
+#### Adicionando novos nós ao Cluster
+
+Para adicionar um novo nó como worker, basta executar o comando abaixo no nó que irá compor o cluster.
+
+```
+docker swarm join \
+    --token SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
+```
+
+#### Listando os nós do Cluster
+
+Para listar os nós do cluster, basta executar o comando abaixo.
+
+```
+docker node ls
+```
+
+Você verá uma saída semelhante a esta:
+
+```
+ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION
+
+dxn1zf6l61qsb1josjja83ngz *   docker-desktop      Ready               Active              Leader              19.03.8
+```
+
+### Criando um serviço com o Docker Swarm
+
+Para criar um serviço com o Docker Swarm, basta executar o comando `docker service create`, como pode ser visto abaixo:
+
+```
+docker service create --name webserver --replicas 15 -p 80:80 nginx
+```
+
+O comando acima irá criar um serviço chamado webserver com 15 réplicas do container nginx, sendo que cada réplica será executada em um nó diferente do cluster.
+
+Para listar os serviços do cluster, basta executar o comando abaixo.
+
+```
+docker service ls
+```
+
+Para forçar que um nó deixe de receber containers, basta executar o comando abaixo.
+
+```
+docker node update --availability drain <node>
+```
+
+Para reativar um nó para receber containers, basta executar o comando abaixo.
+
+```
+docker node update --availability active <node>
+```
+
+### Consistência de dados em um Cluster
+
+Quando um container é criado em um nó, o Docker Swarm cria um volume para armazenar os dados do container. Esse volume é criado em um nó específico e não é compartilhado com os demais nós do cluster. Isso significa que, se um container for criado em um nó e posteriormente for movido para outro nó, os dados do container não serão movidos junto com o container.
+
+Podemos resolver a questões descrita acima utilizando o `nfs-server` para compartilhar o caminho do volume entre os nós do cluster.
+
+####  Instalando o nfs-server
+```
+apt install nfs-server
+```
+
+#### Configurando o nfs-server
+
+Para configurar o nfs-server, basta editar o arquivo `/etc/exports` e adicionar o caminho do volume que será compartilhado entre os nós do cluster. Veja abaixo um exemplo:
+
+```
+/var/lib/docker/volumes/app/_data *(rw,sync,subtree_check)
+```
+
+Salve o arquivo e execute o comando abaixo para aplicar as alterações.
+
+```
+exportfs -ar
+```
+
+Não se esqueça de abrir a porta 2049 no firewall do servidor.
+
+#### Montando o volume compartilhado
+
+Para montar o volume compartilhado, primeiro é necessário instalar o pacote `nfs-common` no nó que irá receber o volume compartilhado.
+
+```
+apt install nfs-common
+```
+
+Após a instalação do pacote, basta executar o comando abaixo para montar o volume compartilhado.
+
+```
+mount -t nfs <ip-do-servidor>:/var/lib/docker/volumes/app/_data /var/lib/docker/volumes/app/_data
+```
+
+### Lab - Definição de um Cluster Swarm Local com o Vagrant
+
+Abaixo o conteúdo do arquivo Vagrantfile utilizado para criação de um cluster Swarm local com o Vagrant.
+
+```ruby
+# -*- mode: ruby -*-
+# vi: set ft=ruby  :
+
+machines = {
+  "master" => {"memory" => "1024", "cpu"=> "1", "ip" => "100" "image" => "bento/ubuntu-22.-4"},
+  "node01" => {"memory" => "1024", "cpu"=> "1", "ip" => "101" "image" => "bento/ubuntu-22.-4"},
+  "node02" => {"memory" => "1024", "cpu"=> "1", "ip" => "102" "image" => "bento/ubuntu-22.-4"}
+}
+
+Vagrant.configure("2") do |config|
+
+  machines.each do |name, conf|
+    config.vm.define "#{name}" do |machine|
+      machine.vm.box = "#{conf['image']}"
+      machine.vm.hostname = "#{name}"
+      machine.vm.network "private_network", ip: "10.10.10.#{conf['ip']}"
+      machine.vm.provider "virtualbox" do |vb|
+        vb.name = "#{name}"
+        vb.memory = "#{conf['memory']}"
+        vb.cpus = "#{conf['cpu']}"
+
+      end
+      machine.vm.provision "shell", path: "docker.sh"
+
+      if "#{name}" == "master"
+        machine.vm.provision "shell", path: "master.sh"
+      else 
+        machine.vm.provision "shell", path: "worker.sh"
+      end
+
+    end
+  end
+end
+```
+
+Demais arquivos desse laboratório estão disponíveis em [lab-vagrant](lab-vagrant/)
