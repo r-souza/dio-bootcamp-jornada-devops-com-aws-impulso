@@ -1,7 +1,9 @@
-CREATE TABLE messages (
+USE meubanco;
+
+CREATE TABLE mensagens (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
+    comentario TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
