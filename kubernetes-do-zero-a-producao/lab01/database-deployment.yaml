@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab01-database
+spec:
+  selector:
+    matchLabels:
+      app: lab01-database
+  template:
+    metadata:
+      labels:
+        app: lab01-database
+    spec:
+      containers:
+      - name: lab01-database 
+        image: rodrigosouza/dio-lab01-database:latest
+        args:
+          - "--ignore-db-dir=lost+found" 
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "Senha123"
+          - name: MYSQL_DATABASE
+            value: "meubanco"
+        volumeMounts:
+          - mountPath: "/var/lib/mysql"
+            name: lab01-pv-database-storage
+      volumes:
+        - name: lab01-pv-database-storage
+          persistentVolumeClaim:
+            claimName: lab01-database-pvc
