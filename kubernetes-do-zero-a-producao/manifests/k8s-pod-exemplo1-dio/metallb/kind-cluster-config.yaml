@@ -1,0 +1,12 @@
+# Post about settings
+# https://medium.com/@tylerauerbeck/metallb-and-kind-loads-balanced-locally-1992d60111d8
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+metadata:
+  name: docker-desktop
+  namespace: kube-system
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - hostPort: 31111
+    containerPort: 31111

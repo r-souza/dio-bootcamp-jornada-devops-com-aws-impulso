@@ -14,6 +14,7 @@ Chegou o bootcamp que vai te dar a oportunidade de impulsionar os seus conhecime
 
 - [Conhecendo o Sistema Operacional Linux](conhecendo-linux/) 
 - [Desmistificando o Docker](desmistificando-docker/)
+- [Kubernetes do Zero a Produção](kubernetes-do-zero-a-producao/)
 
 ## Mais informações
 
