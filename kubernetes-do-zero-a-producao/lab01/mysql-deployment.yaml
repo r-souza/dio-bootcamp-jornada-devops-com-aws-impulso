@@ -32,7 +32,7 @@ spec:
         env:
           # Use secret in real usage
         - name: MYSQL_ROOT_PASSWORD
-          value: password
+          value: "Senha123"
         - name: MYSQL_DATABASE
           value: "meubanco"
         ports:
